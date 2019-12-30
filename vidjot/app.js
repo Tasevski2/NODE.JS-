@@ -4,6 +4,7 @@ const exphbs = require('express-handlebars');
 const methodOverride = require('method-override');
 const flash = require('connect-flash');
 const session = require('express-session'); 
+const passport = require('passport');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 
@@ -12,6 +13,16 @@ const app = express();
 
 const ideas = require('./routes/ideas');
 const users = require('./routes/users');
+
+require('./config/passport')(passport);
+
+mongoose.Promise = global.Promise;
+mongoose.connect('mongodb://localhost/vid-jot', {
+    useNewUrlParser: true,
+    useUnifiedTopology: true 
+})
+    .then(() => console.log("Connected successfuly!"))
+    .catch(err => console.log(err));
 
 
 
@@ -31,6 +42,9 @@ app.use(session({
     saveUninitialized: true
 }));
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 
 app.use(flash());
 
@@ -38,6 +52,8 @@ app.use(function(req, res, next){
     res.locals.success_msg = req.flash("success_msg"),
     res.locals.error_msg = req.flash("error_msg"),
     res.locals.error = req.flash("error");
+    res.locals.success = req.flash("success");
+    res.locals.user = req.user || null;
     next(); 
 
 });
